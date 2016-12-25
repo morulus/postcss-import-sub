@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/morulus/postcss-import-sub/issues"
   },
-  "homepage": "https://github.com/morulus/postcss-import-sub#readme"
+  "homepage": "https://github.com/morulus/postcss-import-sub#readme",
+  "dependencies": {
+    "postcss-import": "^9.0.0"
+  }
 }
