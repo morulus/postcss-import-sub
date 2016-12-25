@@ -1,0 +1,23 @@
+{
+  "name": "postcss-import-sub",
+  "version": "1.0.0",
+  "description": "Postcss import substitution",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/morulus/postcss-import-sub.git"
+  },
+  "keywords": [
+    "postcss",
+    "plugin"
+  ],
+  "author": "Vladimir Kalmykov <vladimirmorulus@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/morulus/postcss-import-sub/issues"
+  },
+  "homepage": "https://github.com/morulus/postcss-import-sub#readme"
+}
