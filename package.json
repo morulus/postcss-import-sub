@@ -2,9 +2,11 @@
   "name": "postcss-import-sub",
   "version": "1.0.0",
   "description": "Postcss import substitution",
+  "engines": {
+    "node": ">=4.0"
+  },
   "main": "index.js",
   "scripts": {
-    "test": "jest"
   },
   "repository": {
     "type": "git",
