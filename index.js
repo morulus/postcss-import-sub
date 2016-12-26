@@ -1,7 +1,21 @@
 "use strict";
-var resolveId = require('postcss-import/lib/resolve-id.js');
+var fs = require('fs');
 var path = require('path');
+var resolveId = require('postcss-import/lib/resolve-id.js');
+var AtImport = require('postcss-import');
 const defaultExpr = /.*/i;
+/**
+* Replace to unix sep
+*/
+function sepToUnix(p) {
+  return p.split(path.sep).join('/');
+}
+/**
+* Test is file exists
+*/
+function testFileExists(filename) {
+  return fs.existsSync(filename);
+}
 /**
 * Simple replace string with key:value in holders
 */
@@ -59,48 +73,73 @@ function mapDefaults(rule) {
   }, rule);
 }
 /**
+* Parse and resolve path
+*/
+function resolve(p, base, holders) {
+  p = replace(p, holders);
+  if (!path.isAbsolute(p)) {
+    p = path.resolve(base, p);
+  }
+  return p;
+}
+/**
 * Search module in rules existing
 */
 function isHasModule(rules) {
   for (let i = 0; i < rules.length; ++i) {
-    if (Object.protoype.hasOwnProperty.call(rules[i], 'module')) {
+    if (Object.prototype.hasOwnProperty.call(rules[i], 'module')) {
       return true;
     }
   }
   return false;
 }
 
-function alternate(config, origin) {
+function sub(options) {
   /**
    * Support simple mode of rules definition
    */
-  if (config instanceof Array) {
-    config = {
-      rules: config
+  if (options instanceof Array) {
+    options = {
+      sub: options
     };
   }
-
-  return Object.assign({}, (origin || {}), {
-    resolve: function(id, base, options) {
+  /**
+   * Defines root. It can be specified in options otherwise will taken from process.cwd()
+   */
+  const root = options.root || process.cwd();
+  /**
+   * Get custom resolve function if user has specified it
+   */
+  const userResolve = typeof options.resolve === "function" ? options.resolve : null;
+  /**
+   * Search module testing rules
+   */
+  const isModuleRequired = isHasModule(options.sub);
+  /**
+   * Define real options
+   */
+  return Object.assign({}, options, {
+    resolve: function(id, base, importOptions) {
       /**
-       * Search module testing rules
+       * Replace window separate style to unix
        */
-      const isModuleRequired = isHasModule(config.rules);
+      base = sepToUnix(base);
       /**
-       * For best performance resolve module only if config has module prop.
+       * For best performance resolve module only if options has module prop.
        */
-      let module = isModuleRequired ? resolveId(id, base, options) : null;
+      let module = isModuleRequired ? resolveId(id, base, importOptions) : '';
       /**
        * Define holders and calculate two general properties [id] and [folder]
        */
       const holders = {
+        "[root]": root,
         "[id]": id, // Is required query string as is (for example ../fonts.css)
-        "[folder]": path.parse(base).dir.split(path.sep).pop() // Is top directory of base path (for example app/components/(button))
+        "[folder]": path.parse(base).base.split('/').pop() // Is top directory of base path (for example app/components/(button))
       };
       /**
        * Flow rules
        */
-      config.rules
+      const resultList = options.sub
       /**
        * We want only rules with `to` or `path` prop.
        */
@@ -113,7 +152,7 @@ function alternate(config, origin) {
       * Test each expression (id, base, module)
       */
       .filter(function(rule) {
-        return rule.id.test(id) && rule.base.test(base) && rule.module.test(module)
+        return rule.id.test(id) && rule.base.test(base) && rule.module.test(module);
       })
       .map(function(rule) {
         /**
@@ -139,17 +178,36 @@ function alternate(config, origin) {
             Object.assign(holders, matchToHolders(matchModule, 'module'));
           }
         }
+        /**
+         * Resolve
+         */
         if (rule.to) {
-          /**
-           * Resolve path to file
-           */
-           return replace(rule.to, holders);
+          return resolve(rule.to, base, holders);
         } else {
-          return path.resolve(replace(rule.path, holders), id);
+          const p = resolve(rule.path, base, holders);
+          return path.resolve(p, id);
         }
-      });
+      })
+      .filter(testFileExists);
+
+      if (resultList.length>0) {
+        return resultList;
+      }
+
+      if (userResolve) {
+        return userResolve(id, base, importOptions);
+      }
+
+      return (isModuleRequired ? module : resolveId(id, base, importOptions));
     }
   });
 }
 
-module.exports = alternate;
+module.exports = function substitute(options) {
+  return AtImport(sub(options));
+}
+
+module.exports.sub = sub;
+module.exports.process = AtImport.process;
+module.exports.postcss = AtImport.postcss;
+module.exports.AtImport = AtImport;
