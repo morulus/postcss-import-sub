@@ -132,6 +132,7 @@ function sub(options) {
        * Define holders and calculate two general properties [id] and [folder]
        */
       const holders = {
+        "~": root,
         "[root]": root,
         "[id]": id, // Is required query string as is (for example ../fonts.css)
         "[folder]": path.parse(base).base.split('/').pop() // Is top directory of base path (for example app/components/(button))
