@@ -1,7 +1,7 @@
 postcss-import-sub
 --
 
-It is decoration for plugin [postcss-import](https://github.com/postcss/postcss-import), which allows you to substitute the path resolved by __postcss-import__ on the alternate.
+It is decoration for plugin [postcss-import](https://github.com/postcss/postcss-import), which allows you to declare resolve rules.
 
 ## Installation
 
