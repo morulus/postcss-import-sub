@@ -11,7 +11,7 @@ $ npm install postcss-import-sub
 
 ## Usage
 
-First, you should to read about [post-import](https://github.com/postcss/postcss-import), because the plugin uses its functionality and acts in the same way, with one exception: in the options you can define the specific rules the path substitution.
+First, you should read about [post-import](https://github.com/postcss/postcss-import), because the plugin uses its functionality and acts in the same way, with one exception: in the options you can define the specific rules the path substitution.
 ```js
 // dependencies
 var fs = require("fs")
@@ -68,7 +68,7 @@ subImport([
 ```
 This import will always search for red.css instead any required filename. Impractical example :)
 
-But how about to replace only _blue.css_ into the _red.css_ and only if the request comes from a directory `pencil`?
+But how about to replace only the _blue.css_ into the _red.css_ and only if the request comes from a directory `pencil`?
 
 _app/components/pencil/style.css_
 ```css
@@ -90,11 +90,11 @@ subImport([
 ])
 ```
 
-Hmm, how to use it in practice? To answer this question let's learn some more capability of plugin.
+Hmm, how to use it in practice? To answer this question let's learn some more capability of the plugin.
 
 ## Customization of styles
 
-A nice feature of the plugin is the fact that if the overridden path is not exists, it will use the standard method of file resolving. It allows you to create an environment in which any style can work fine without substitution (for example, in the case of using classic postcss-import plugin). When you replace postcss-import to postcss-import-sub, you have the opportunity to customize the styles without spoiling the original sources.
+A nice feature of the plugin is the fact that if the overridden path does not exists, it will use the standard method of file resolving. It allows you to create an environment in which any style can work fine without substitution (for example, in the case of using the classic postcss-import plugin). When you replace postcss-import to postcss-import-sub, you have the opportunity to customize the styles without spoiling the original sources.
 
 Imagine a set of components with styles which we'd like to have able to replace without editing component's files themselves.
 
@@ -144,18 +144,18 @@ subImport([
   }
 ]);
 ```
-Last thing - we should to create the new file with new variables.
+The last thing, we should create the new file with new variables.
 
 _theme/components/Pencil/variables.css_
 ```css
 $PencilColor: blue;
 ```
 
-If you will build the application with same configuration, you'll see that Pencil became blue.
+If you will build the application with the same configuration, you'll see that Pencil became blue.
 
 ### Total coverage
 
-In the last example we have indicated a specific file name, with which the substitution of imports must occur. And we have formed target filename. But in fact, we are not obliged to do so.
+In the last example, we have indicated a specific file name, with which the substitution of imports must occur. And we have formed target filename. But in fact, we are not obliged to do so.
 
 Let's remove the excess.
 
@@ -170,15 +170,15 @@ subImport([
 ]);
 ```
 
-This example will _sub_ each imported css file in components directory.
+This example will _sub_ each imported CSS file in components directory.
 
 The difference between option `path` and `to` is that  __to__ - clearly specifies the file location, while __path__ - indicates only the directory to resolve. The requested file will be found in this directory automatically.
 
 ## Challenges
 
-For the formation of complex paths, you should use regex. Regular expressions allow you to find specific words and then use them in the  formation of paths.
+For the formation of complex paths, you should use regex. Regular expressions allow you to find specific words and then use them in the formation of paths.
 
-Each result of the regular expression is placed in a special hashmap of aliases. Those aliases you can insert to the template string. Look at example to understand how it works.
+Each result of the regular expression is placed in a special hashmap of aliases. Those aliases you can insert to the template string. Look at next example to understand how it works.
 
 ```js
 subImport([
@@ -219,7 +219,7 @@ Usage of approach of the regular expression is limited only by your imagination.
 
 ## Using original postcss-import options
 
-You can define original postcss-import options as well as the usual. But in this case the rules for a postcss-import-sub is specified in the property `sub`.
+You can define original postcss-import options as well as the usual. But in this case, the rules for a postcss-import-sub is specified in the property `sub`.
 
 ```js
 subImport({
