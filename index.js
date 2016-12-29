@@ -1,3 +1,4 @@
+/* eslint no-debugger: 0 */
 "use strict";
 var fs = require('fs');
 var path = require('path');
@@ -179,10 +180,12 @@ function sub(options) {
             Object.assign(holders, matchToHolders(matchModule, 'module'));
           }
         }
+
         /**
          * Resolve
          */
         if (rule.to) {
+          debugger;
           return resolve(rule.to, base, holders);
         } else {
           const p = resolve(rule.path, base, holders);
