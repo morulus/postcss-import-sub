@@ -53,7 +53,7 @@ function object(pairs) {
 */
 function matchToHolders(match, tag) {
   return object(match.map(function(val, index) {
-    return ["["+tag+":"+index+"]", val];
+    return ["<"+tag+":"+index+">", val];
   }));
 }
 /**
@@ -74,14 +74,26 @@ function mapDefaults(rule) {
   }, rule);
 }
 /**
-* Parse and resolve path
+* Simple resolve path (usign path.resolve)
 */
-function resolve(p, base, holders) {
-  p = replace(p, holders);
+function resolveSync(p, base) {
   if (!path.isAbsolute(p)) {
-    p = path.resolve(base, p);
+    p = path.resolve(base, p, resolveOpt);
   }
   return p;
+}
+/**
+* Resolve path the same way ans postcss-import
+*
+* @return {Promise}
+*/
+function resolve(p, base, resolveOpt) {
+  if (!path.isAbsolute(p)) {
+    return resolveId(p, base, resolveOpt);
+  } else {
+
+    return Promise.resolve(p);
+  }
 }
 /**
 * Search module in rules existing
@@ -126,83 +138,92 @@ function sub(options) {
        */
       base = sepToUnix(base);
       /**
-       * For best performance resolve module only if options has module prop.
-       */
-      let module = isModuleRequired ? resolveId(id, base, importOptions) : '';
-      /**
        * Define holders and calculate two general properties [id] and [folder]
        */
       const holders = {
         "~": root,
-        "[root]": root,
-        "[id]": id, // Is required query string as is (for example ../fonts.css)
-        "[folder]": path.parse(base).base.split('/').pop() // Is top directory of base path (for example app/components/(button))
+        "<root>": root,
+        "<id>": id, // Is required query string as is (for example ../fonts.css)
+        "<folder>": path.parse(base).base.split('/').pop() // Is top directory of base path (for example app/components/(button))
       };
       /**
-       * Flow rules
+       * For best performance resolve module only if options has module prop.
        */
-      const resultList = options.sub
-      /**
-       * We want only rules with `to` or `path` prop.
-       */
-      .filter(filterValidRule)
-      /**
-      * Merge with default expressions (id, base, module)
-      */
-      .map(mapDefaults)
-      /*
-      * Test each expression (id, base, module)
-      */
-      .filter(function(rule) {
-        return rule.id.test(id) && rule.base.test(base) && rule.module.test(module);
+      return (isModuleRequired ? resolveId(id, base, importOptions) : Promise.resolve(''))
+      .then(function(module) {
+        /**
+         * Flow rules
+         */
+        return options.sub
+        /**
+         * We want only rules with `to` or `path` prop.
+         */
+        .filter(filterValidRule)
+        /**
+        * Merge with default expressions (id, base, module)
+        */
+        .map(mapDefaults)
+        /*
+        * Test each expression (id, base, module)
+        */
+        .filter(function(rule) {
+          return rule.id.test(id) && rule.base.test(base) && rule.module.test(module);
+        });
       })
-      .map(function(rule) {
-        /**
-         * Match id
-         */
-        let matchId = rule.id.exec(id);
-        if (matchId) {
-          Object.assign(holders, matchToHolders(matchId, 'id'));
-        }
-        /**
-         * Match base
-         */
-        let matchBase = rule.base.exec(base);
-        if (matchBase) {
-          Object.assign(holders, matchToHolders(matchBase, 'base'));
-        }
-        /**
-         * Match module (optional)
-         */
-        if (isModuleRequired) {
-          let matchModule = rule.module.exec(module);
-          if (matchModule) {
-            Object.assign(holders, matchToHolders(matchModule, 'module'));
+      .then(function(rules) {
+        return Promise.all(rules.map(function(rule) {
+          /**
+           * Match id
+           */
+          let matchId = rule.id.exec(id);
+          if (matchId) {
+            Object.assign(holders, matchToHolders(matchId, 'id'));
           }
-        }
-
-        /**
-         * Resolve
-         */
-        if (rule.to) {
-          debugger;
-          return resolve(rule.to, base, holders);
-        } else {
-          const p = resolve(rule.path, base, holders);
-          return path.resolve(p, id);
-        }
+          /**
+           * Match base
+           */
+          let matchBase = rule.base.exec(base);
+          if (matchBase) {
+            Object.assign(holders, matchToHolders(matchBase, 'base'));
+          }
+          /**
+           * Match module (optional)
+           */
+          if (isModuleRequired) {
+            let matchModule = rule.module.exec(module);
+            if (matchModule) {
+              Object.assign(holders, matchToHolders(matchModule, 'module'));
+            }
+          }
+          /**
+           * Parse aliases and resolve final path
+           */
+          if (rule.to) {
+            return resolve(replace(rule.to, holders), base, importOptions);
+          } else {
+            return resolve(id, resolveSync(replace(rule.path, holders), base), importOptions);
+          }
+        }));
       })
-      .filter(testFileExists);
-
-      if (resultList.length>0) {
-        return resultList;
-      }
-
-      if (userResolve) {
-        return userResolve(id, base, importOptions);
-      }
-
-      return (isModuleRequired ? module : resolveId(id, base, importOptions));
+      .then(function(files) {
+        const existsFiles = files.filter(testFileExists);
+        /**
+        * If at least one of file exists, we returns them
+        */
+        if (existsFiles.length>0) {
+          return existsFiles;
+        }
+        /**
+        * On fail we must check for use resolve function to execute it
+        */
+        if (userResolve) {
+          return userResolve(id, base, importOptions);
+        }
+        /**
+        * On total fail just returns id, postcss-import will decide what to do.
+        */
+        return id;
+      });
     }
   });
 }
