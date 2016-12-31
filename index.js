@@ -2,6 +2,7 @@
 "use strict";
 var fs = require('fs');
 var path = require('path');
+var resolve = require('resolve');
 var resolveId = require('postcss-import/lib/resolve-id.js');
 var AtImport = require('postcss-import');
 const defaultExpr = /.*/i;
@@ -53,7 +54,7 @@ function object(pairs) {
 */
 function matchToHolders(match, tag) {
   return object(match.map(function(val, index) {
-    return ["<"+tag+":"+index+">", val];
+    return ["<"+tag+":$"+index+">", val];
   }));
 }
 /**
@@ -74,11 +75,20 @@ function mapDefaults(rule) {
   }, rule);
 }
 /**
+* Make path with dot if it hasn't. This function assumes in advance that you giving to it a relative path.
+*/
+function forceRelative(p) {
+  if (p.charAt(0) !== '.') {
+    return p.charAt(0) === '/' ? p : './'+p;
+  }
+  return p;
+}
+/**
 * Simple resolve path (usign path.resolve)
 */
 function resolveSync(p, base) {
   if (!path.isAbsolute(p)) {
-    p = path.resolve(base, p, resolveOpt);
+    p = path.resolve(base, p);
   }
   return p;
 }
@@ -87,9 +97,20 @@ function resolveSync(p, base) {
 *
 * @return {Promise}
 */
-function resolve(p, base, resolveOpt) {
+function resolveAsync(p, base) {
   if (!path.isAbsolute(p)) {
-    return resolveId(p, base, resolveOpt);
+    return new Promise(function(r, j) {
+      resolve(forceRelative(p), {
+        basedir: base
+      }, function(err, res) {
+        if (err) {
+          j(err);
+        } else {
+          r(res);
+        }
+      });
+    });
+
   } else {
 
     return Promise.resolve(p);
@@ -154,7 +175,7 @@ function sub(options) {
         /**
          * Flow rules
          */
-        return options.sub
+        return [options.sub
         /**
          * We want only rules with `to` or `path` prop.
          */
@@ -168,10 +189,10 @@ function sub(options) {
         */
         .filter(function(rule) {
           return rule.id.test(id) && rule.base.test(base) && rule.module.test(module);
-        });
+        }), module];
       })
-      .then(function(rules) {
-        return Promise.all(rules.map(function(rule) {
+      .then(function(parcle) {
+        return Promise.all(parcle[0].map(function(rule) {
           /**
            * Match id
            */
@@ -190,7 +211,7 @@ function sub(options) {
            * Match module (optional)
            */
           if (isModuleRequired) {
-            let matchModule = rule.module.exec(module);
+            let matchModule = rule.module.exec(parcle[1]);
             if (matchModule) {
               Object.assign(holders, matchToHolders(matchModule, 'module'));
             }
@@ -199,9 +220,9 @@ function sub(options) {
            * Parse aliases and resolve final path
            */
           if (rule.to) {
-            return resolve(replace(rule.to, holders), base, importOptions);
+            return resolveAsync(replace(rule.to, holders), base);
           } else {
-            return resolve(id, resolveSync(replace(rule.path, holders), base), importOptions);
+            return resolveAsync(id, resolveSync(replace(rule.path, holders), base), importOptions);
           }
         }));
       })
@@ -222,6 +243,9 @@ function sub(options) {
         /**
         * On total fail just returns id, postcss-import will decide what to do.
         */
+        return id;
+      })
+      .catch(function(e) {
         return id;
       });
     }
