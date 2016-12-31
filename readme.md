@@ -137,10 +137,10 @@ subImport([
      * Finally, we need to specify where script to look for a new file.
      * Here I am using aliases.
      * ~ - Reference to the root of current project
-     * [folder] - Contains the base name of folder where import used.
+     * <folder> - Contains the base name of folder where import used.
      * The use of this alias allows substitution for each component.
      */
-    to: '~/theme/components/[folder]/variable.css'
+    to: '~/theme/components/<folder>/variable.css'
   }
 ]);
 ```
@@ -164,8 +164,8 @@ subImport([
   {
     // id: /variables\.css/,
     base: /components/,
-    // to: '~/theme/components/[folder]/variable.css'
-    path: '~/theme/components/[folder]'
+    // to: '~/theme/components/<folder>/variable.css'
+    path: '~/theme/components/<folder>'
   }
 ]);
 ```
@@ -213,9 +213,9 @@ Usage of approach of the regular expression is limited only by your imagination.
 
 ## Predefined template variables
 
-- `[root]` Root directory of the project (process.cwd() by default);
-- `[id]` The string passed to import;
-- `[folder]` Base directory name.
+- `<root>`, `~` Root directory of the project (process.cwd() by default);
+- `<id>` The string passed to import;
+- `<folder>` Base directory name.
 
 ## Using original postcss-import options
 
@@ -231,6 +231,16 @@ subImport({
 ```
 
 If you wanna to specify your own `resolve` function, keep in mind that your function will be called only in case of failure of sub.
+
+# Examples
+
+__Color theme__
+```shell
+git clone https://github.com/morulus/postcss-import-sub.git
+cd postcss-import-sub/examples/colortheme
+npm install
+npm start
+```
 
 # License
 
