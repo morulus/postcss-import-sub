@@ -185,15 +185,15 @@ subImport([
   {
      id: /([a-z0-9\.\-]*\.css)$/i,
     base: /components/([a-z0-9]*)\/assets\/([a-z0-9]*)$/i,
-    path: '~/theme/components/[base:$1]/assets/[base:$2]/[id:$1]'
+    path: '~/theme/components/<base:$1>/assets/<base:$2>/<id:$1>'
   }
 ]);
 ```
 
 In this case, we get the three aliases:
-- `([a-z0-9\.\-]*\.css)` will become `[id:$1]` and will contain required filename;
-- First `([a-z0-9]*)` will become `[base:$1]` and will contain component name;
-- Second `([a-z0-9]*)` will become `[base:$2]` and will contain some directory inside assets.
+- `([a-z0-9\.\-]*\.css)` will become `<id:$1>` and will contain required filename;
+- First `([a-z0-9]*)` will become `<base:$1>` and will contain component name;
+- Second `([a-z0-9]*)` will become `<base:$2>` and will contain some directory inside assets.
 
 Usage of approach of the regular expression is limited only by your imagination.
 
