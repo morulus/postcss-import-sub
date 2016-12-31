@@ -16,7 +16,7 @@ var postcss    = require('gulp-postcss');
 
 gulp.src('src/postcss-logo.css')
 .pipe( postcss([
-  require('../../index.js')([
+  require('postcss-import-sub')([
     {
       base: /src/,
       id: /color\.css/,
