@@ -16,7 +16,7 @@ function sepToUnix(p) {
 * Test is file exists
 */
 function testFileExists(filename) {
-  return fs.existsSync(filename);
+  return fs.existsSync(filename[0]);
 }
 /**
 * Simple replace string with key:value in holders
@@ -117,17 +117,37 @@ function resolveAsync(p, base) {
   }
 }
 /**
+* Select only rules witj extend property
+*/
+function ruleCheckAppend(rule) {
+  return Object.prototype.hasOwnProperty.call(rule, 'append')&&rule.append;
+}
+/**
 * Search module in rules existing
 */
-function isHasModule(rules) {
+function isHasModuleOrAppend(rules) {
   for (let i = 0; i < rules.length; ++i) {
-    if (Object.prototype.hasOwnProperty.call(rules[i], 'module')) {
+    if (
+      Object.prototype.hasOwnProperty.call(rules[i], 'module') ||
+      (Object.prototype.hasOwnProperty.call(rules[i], 'append') && rules[i].append)
+    ) {
       return true;
     }
   }
   return false;
 }
-
+/**
+* Pick first value from Array<Array>
+*/
+function pickFirst(item) {
+  return item[0];
+}
+/**
+* Pick second value from Array<Array>
+*/
+function pickSecond(item) {
+  return item[1];
+}
 function sub(options) {
   /**
    * Support simple mode of rules definition
@@ -148,7 +168,7 @@ function sub(options) {
   /**
    * Search module testing rules
    */
-  const isModuleRequired = isHasModule(options.sub);
+  const isModuleRequired = isHasModuleOrAppend(options.sub);
   /**
    * Define real options
    */
@@ -193,6 +213,7 @@ function sub(options) {
       })
       .then(function(parcle) {
         return Promise.all(parcle[0].map(function(rule) {
+          let resolver;
           /**
            * Match id
            */
@@ -220,19 +241,33 @@ function sub(options) {
            * Parse aliases and resolve final path
            */
           if (rule.to) {
-            return resolveAsync(replace(rule.to, holders), base);
+            resolver = resolveAsync(replace(rule.to, holders), base)
           } else {
-            return resolveAsync(id, resolveSync(replace(rule.path, holders), base), importOptions);
+            resolver = resolveAsync(id, resolveSync(replace(rule.path, holders), base), importOptions);
           }
-        }));
+          return resolver
+          .then(function(file) {
+            return [file, rule];
+          });
+        }))
+        .then(function(files) {
+          return [files, parcle[1]];
+        });
       })
-      .then(function(files) {
+      .then(function(parcle) {
+        const files = parcle[0];
+        const module = parcle[1];
         const existsFiles = files.filter(testFileExists);
         /**
         * If at least one of file exists, we returns them
         */
         if (existsFiles.length>0) {
-          return existsFiles;
+          const isAppendModule = (
+            existsFiles
+            .map(pickSecond)
+            .filter(ruleCheckAppend).length>0
+          );
+          return (isAppendModule ? [module] : []).concat(existsFiles.map(pickFirst));
         }
         /**
         * On fail we must check for use resolve function to execute it
