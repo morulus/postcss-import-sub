@@ -1,6 +1,6 @@
 .eslintrc.json
 .eslintignore
 .gitignore
-test.js
+jest.js
 __tests__
 __mocks__
