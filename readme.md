@@ -46,7 +46,7 @@ The rule consists of two parts:
 
 1. Conditions in which cases a rule should work. To do this, you specify a regular expression for _id_ (query string), _base_ (path to module which requires resource), or _module_ (resolved path by postcss-import).
 
-For example, you have `style.css` inside component folder `app/components/Button`, which imports `colors.css`.
+For example, you have `style.css` inside directory `app/components/Button`, which imports `colors.css`.
 
 ```css
 @import "colors.css";
@@ -61,7 +61,7 @@ Here:
 - `./app/components/Button` is __base__;
 - `./app/components/Button/colors.css` id __module__.
 
-Use regular expressions that would create the condition.
+Use regular expressions to create the condition, based on these values:
 
 ```js
 subImport([{
@@ -109,15 +109,15 @@ subImport([
   {
      id: /([a-z0-9\.\-]*\.css)$/i,
     base: /components/([a-z0-9]*)\/assets\/([a-z0-9]*)$/i,
-    path: '~/theme/components/[base:$1]/assets/[base:$2]/[id:$1]'
+    path: '~/theme/components/<base:$1>/assets/<base:$2>/<id:$1>'
   }
 ]);
 ```
 
 In this case, we get the three aliases:
-- `([a-z0-9\.\-]*\.css)` will become `[id:$1]` and will contain required filename;
-- First `([a-z0-9]*)` will become `[base:$1]` and will contain component name;
-- Second `([a-z0-9]*)` will become `[base:$2]` and will contain some directory inside assets.
+- `([a-z0-9\.\-]*\.css)` will become `<id:$1>` and will contain required filename;
+- First `([a-z0-9]*)` will become `<base:$1>` and will contain component name;
+- Second `([a-z0-9]*)` will become `<base:$2>` and will contain some directory inside assets.
 
 Usage of approach of the regular expression is limited only by your imagination.
 
