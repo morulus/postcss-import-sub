@@ -1,7 +1,7 @@
 postcss-import-sub
 --
 
-It is decoration for plugin [postcss-import](https://github.com/postcss/postcss-import), which allows you to declare resolve rules.
+It is decoration for plugin [postcss-import](https://github.com/postcss/postcss-import), which helps to create resolve rules.
 
 ## Installation
 
@@ -11,7 +11,7 @@ $ npm install postcss-import-sub
 
 ## Usage
 
-First, you should read about [post-import](https://github.com/postcss/postcss-import), because the plugin uses its functionality and acts in the same way, with one exception: in the options you can define the specific rules the path substitution.
+First, you should learn how to use [post-import](https://github.com/postcss/postcss-import), because the plugin uses its functionality and acts in the same way, with one exception: in the options you can specify the instructions for the path substitution.
 ```js
 // dependencies
 var fs = require("fs")
@@ -25,7 +25,8 @@ var css = fs.readFileSync("css/input.css", "utf8")
 postcss()
   .use(subImport([
     {
-      path: 'theme/red'
+      base: /components/,
+      path: '<root>/custom/<folder>'
     }
   ]))
   .process(css, {
@@ -39,146 +40,69 @@ postcss()
   })
 ```
 
-Let's look closely at the options.
+## How it works
 
-```js
-subImport([
-  {
-    path: 'theme/red'
-  }
-])
-```
+The rule consists of two parts:
 
-We say that any import must resolve `id` relative to the `theme/red` folder, which must be resolved relative to the current folder.
+1. Conditions in which cases a rule should work. To do this, you specify a regular expression for _id_ (query string), _base_ (path to module which requires resource), or _module_ (resolved path by postcss-import).
 
-For example, next code:
+For example, you have `style.css` inside component folder `app/components/Button`, which imports `colors.css`.
+
 ```css
-@import "variables.css";
-```
-Will import _variables.css_ from `./theme/red/variables.css` instead `./variables.css`.
+@import "colors.css";
 
-We can specify a particular file, which will be used to substitute any id.
-
-```js
-subImport([
-  {
-    to: 'red.css'
-  }
-])
-```
-This import will always search for red.css instead any required filename. Impractical example :)
-
-But how about to replace only the _blue.css_ into the _red.css_ and only if the request comes from a directory `pencil`?
-
-_app/components/pencil/style.css_
-```css
-@import 'red.css';
-.Pencil {
-  color: $pencilColor; // red
+Button {
+  background-color: $bgColor;
 }
 ```
 
-We can make it:
+Here:
+- `colors.css` is __id__;
+- `./app/components/Button` is __base__;
+- `./app/components/Button/colors.css` id __module__.
+
+Use regular expressions that would create the condition.
 
 ```js
-subImport([
-  {
-    id: /blue\.css/,
-    base /pencils/,
-    to: 'red.css'
-  }
-])
+subImport([{
+  id: /colors\.css/,
+  base: /components\/Button/
+}]);
 ```
 
-Hmm, how to use it in practice? To answer this question let's learn some more capability of the plugin.
+2. Next properties specify a new path to the file. It is `to` or `path`.
 
-## Customization of styles
-
-A nice feature of the plugin is the fact that if the overridden path does not exists, it will use the standard method of file resolving. It allows you to create an environment in which any style can work fine without substitution (for example, in the case of using the classic postcss-import plugin). When you replace postcss-import to postcss-import-sub, you have the opportunity to customize the styles without spoiling the original sources.
-
-Imagine a set of components with styles which we'd like to have able to replace without editing component's files themselves.
-
-```
-components
-  --Pencil
-    --style.css
-    --veriables.css
+Use a property `to` when you want to specify a particular file.
+```js
+subImport([{
+  id: /colors\.css/,
+  base: /components\/Button/,
+  to: "<root>/customized/components/Button/colors.css"
+}]);
 ```
 
-_components/Pencil/variables.css_
+Or a property `path` when only need to specify a different directory to resolve (in this example, it will give the same result).
+```js
+subImport([{
+  id: /colors\.css/,
+  base: /components\/Button/,
+  path: "<root>/customized/components/Button"
+}]);
+```
+
+This way will give you:
 ```css
-$PencilColor: red;
-```
+/* content of ./customized/components/colors.css
+instead of ./app/components/Button/colors.css */
 
-_components/Pencil/style.css_
-```css
-@import 'variables.css';
-
-.Pencil {
-  background-color: $PencilColor;
+Button {
+  background-color: $bgColor;
 }
 ```
 
-Currently, Pencil is red. Now we need to adjust the import so as to make it blue.
+## Using substrings
 
-```js
-subImport([
-  {
-    /**
-     * To begin with, we need to restrict the rule
-     * to directory `components`
-     */
-    base: /components/,
-    /**
-     * We are interested only in the file `variables.css`
-     */
-    id: /variables\.css$/,
-    /**
-     * Finally, we need to specify where script to look for a new file.
-     * Here I am using aliases.
-     * ~ - Reference to the root of current project
-     * <folder> - Contains the base name of folder where import used.
-     * The use of this alias allows substitution for each component.
-     */
-    to: '~/theme/components/<folder>/variable.css'
-  }
-]);
-```
-The last thing, we should create the new file with new variables.
-
-_theme/components/Pencil/variables.css_
-```css
-$PencilColor: blue;
-```
-
-If you will build the application with the same configuration, you'll see that Pencil became blue.
-
-### Total coverage
-
-In the last example, we have indicated a specific file name, with which the substitution of imports must occur. And we have formed target filename. But in fact, we are not obliged to do so.
-
-Let's remove the excess.
-
-```js
-subImport([
-  {
-    // id: /variables\.css/,
-    base: /components/,
-    // to: '~/theme/components/<folder>/variable.css'
-    path: '~/theme/components/<folder>'
-  }
-]);
-```
-
-This example will _sub_ each imported CSS file in components directory.
-
-The difference between option `path` and `to` is that  __to__ - clearly specifies the file location, while __path__ - indicates only the directory to resolve. The requested file will be found in this directory automatically.
-
-## Challenges
-
-For the formation of complex paths, you should use regex. Regular expressions allow you to find specific words and then use them in the formation of paths.
-
-Each result of the regular expression is placed in a special hashmap of aliases. Those aliases you can insert to the template string. Look at next example to understand how it works.
+You can use the substrings retrieved from `id`, `base` or `module` by the regular expression to form the path. To insert a substring of a concrete source there are special aliases, that are created based on the pattern `<${variable}:${index}>`.
 
 ```js
 subImport([
@@ -197,13 +121,42 @@ In this case, we get the three aliases:
 
 Usage of approach of the regular expression is limited only by your imagination.
 
-## Options of rules
+In addition, you can use predefined placeholders, such as `<root>`, `<id>`, `<folder>` (read [Predefined placeholders](#Predefined-Placeholders)).
+
+
+## Not strict substitution
+
+A nice feature of the plugin is the fact that if the overridden path does not exists, it will use the standard method of file resolving. It allows you to create an environment in which any style can work fine without substitution (for example, in the case of using the classic postcss-import plugin). When you replace postcss-import to postcss-import-sub, you have the opportunity to customize the styles without spoiling the original sources.
+
+## Appending
+
+In some cases, it is important not to replace imported resource, and to add to the default. For these cases, there is an option `append`.
+
+```js
+subImport([
+    {
+      id: /variables\.css/,
+      to: "<root>/global/style.css",
+      append: true
+    }
+])
+```
+
+The added resource will work exactly the same as if you add it as a second import.
+
+```css
+@import "variables.css";
+@import "style.css"; /* Appended style */
+```
+
+## Properties of rules
 
 - __id__ {RegExp} Regular expression to match and test `id`;
 - __base__ {RegExp} Regular expression to match and test `base`;
 - __module__ {RegExp} Regular expression to match and test `module`;
 - __path__ {string} Path of directory to resolve with;
 - __to__ {string} Path to target file.
+- __append__ {bool} Enable append mode
 
 ## Designation
 
@@ -211,7 +164,7 @@ Usage of approach of the regular expression is limited only by your imagination.
 - __base__ The absolute path to the directory, relative to which the file will be resolved;
 - __module__ Already resolved by postcss-import path.
 
-## Predefined template variables
+## Predefined placeholders
 
 - `<root>`, `~` Root directory of the project (process.cwd() by default);
 - `<id>` The string passed to import;
@@ -234,10 +187,24 @@ If you wanna to specify your own `resolve` function, keep in mind that your func
 
 # Examples
 
-__Color theme__
+__Recolor__
+
+Rule of recoloring SVG logo by substituting one CSS file.
+
 ```shell
 git clone https://github.com/morulus/postcss-import-sub.git
-cd postcss-import-sub/examples/colortheme
+cd postcss-import-sub/examples/recolor
+npm install
+npm start
+```
+
+__Common theme__
+
+Append to all `theme.css` common theme.
+
+```shell
+git clone https://github.com/morulus/postcss-import-sub.git
+cd postcss-import-sub/examples/common-theme
 npm install
 npm start
 ```
