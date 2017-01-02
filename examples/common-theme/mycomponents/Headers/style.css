@@ -1,0 +1,30 @@
+@import "theme.css";
+
+.Headers {
+
+}
+
+.Headers h1 {
+  font-family: $hFontFamily;
+  font-size: $h1FontSize;
+}
+
+.Headers h2 {
+  font-family: $hFontFamily;
+  font-size: $h2FontSize;
+}
+
+.Headers h3 {
+  font-family: $hFontFamily;
+  font-size: $h3FontSize;
+}
+
+.Headers h4 {
+  font-family: $hFontFamily;
+  font-size: $h4FontSize;
+}
+
+.Headers h5 {
+  font-family: $hFontFamily;
+  font-size: $h5FontSize;
+}

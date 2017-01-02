@@ -1,0 +1,23 @@
+@import "theme.css";
+
+.colorGroup {
+  padding:0;
+  margin:0;
+  list-style: none;
+}
+
+.colorGroup li {
+  padding: 10px 15px 11px;
+  margin: 0;
+}
+
+.color50 { background-color: $color50; }
+.color100 { background-color: $color100; }
+.color200 { background-color: $color200; }
+.color300 { background-color: $color300; }
+.color400 { background-color: $color400; }
+.color500 { background-color: $color500; }
+.color600 { background-color: $color600; }
+.color700 { background-color: $color700; }
+.color800 { background-color: $color800; }
+.color900 { background-color: $color900; }
