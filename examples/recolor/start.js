@@ -5,6 +5,7 @@ const themeName = process.env.COLOR || 'default';
 const chalk = require('chalk');
 const launch = require('opn');
 const path = require('path');
+const subImport = require('postcss-import-sub');
 
 console.log(chalk.magenta('Build...'));
 
@@ -16,7 +17,7 @@ var postcss    = require('gulp-postcss');
 
 gulp.src('src/postcss-logo.css')
 .pipe( postcss([
-  require('postcss-import-sub')([
+  subImport([
     {
       base: /src/,
       id: /color\.css/,

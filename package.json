@@ -6,7 +6,9 @@
     "node": ">=4.0"
   },
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "node jest.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/morulus/postcss-import-sub.git"
