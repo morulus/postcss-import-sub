@@ -3,4 +3,4 @@
 .gitignore
 test.js
 __tests__
-__mock__
+__mocks__
