@@ -2,7 +2,7 @@
 "use strict";
 const resolveId = require('postcss-import/lib/resolve-id.js');
 const AtImport = require('postcss-import');
-const resolve = require('../import-sub/resolve.js');
+const resolve = require('import-sub');
 
 function sub(options) {
   /**
