@@ -25,8 +25,12 @@ var css = fs.readFileSync("css/input.css", "utf8")
 postcss()
   .use(subImport([
     {
-      base: /components/,
-      path: '<root>/custom/<folder>'
+      match: {
+        base: /components/
+      },
+      use: {
+        base: '<root>/custom/<folder>'
+      }
     }
   ]))
   .process(css, {
@@ -44,7 +48,7 @@ postcss()
 
 The rule consists of two parts:
 
-1. Conditions in which cases a rule should work. To do this, you specify a regular expression for _id_ (query string), _base_ (path to module which requires resource), or _module_ (resolved path by postcss-import).
+1. Conditions in which cases a rule should work. To do this, you specify a regular expression for _request_ (query string) and/or _base_ (path to module which requires resource).
 
 For example, you have `style.css` inside directory `app/components/Button`, which imports `colors.css`.
 
@@ -57,36 +61,36 @@ Button {
 ```
 
 Here:
-- `colors.css` is __id__;
+- `colors.css` is __request__;
 - `./app/components/Button` is __base__;
-- `./app/components/Button/colors.css` id __module__.
 
 Use regular expressions to create the condition, based on these values:
 
 ```js
 subImport([{
-  id: /colors\.css/,
-  base: /components\/Button/
+  match: {
+    request: /colors\.css/,
+    base: /components\/Button/,
+  },
+  use: {
+    ...
+  }
 }]);
 ```
 
-2. Next properties specify a new path to the file. It is `to` or `path`.
+Next property specify a new values of _request_ and/or _base_.
 
 Use a property `to` when you want to specify a particular file.
 ```js
 subImport([{
-  id: /colors\.css/,
-  base: /components\/Button/,
-  to: "<root>/customized/components/Button/colors.css"
-}]);
-```
-
-Or a property `path` when only need to specify a different directory to resolve (in this example, it will give the same result).
-```js
-subImport([{
-  id: /colors\.css/,
-  base: /components\/Button/,
-  path: "<root>/customized/components/Button"
+  match: {
+    request: /colors\.css/,
+    base: /components\/Button/,
+  },
+  use: {
+    request: "./customized/components/Button/colors.css",
+    base: "<root>"
+  }
 }]);
 ```
 
@@ -102,26 +106,30 @@ Button {
 
 ## Using substrings
 
-You can use the substrings retrieved from `id`, `base` or `module` by the regular expression to form the path. To insert a substring of a concrete source there are special aliases, that are created based on the pattern `<${variable}:${index}>`.
+You can use the substrings retrieved from `request` or `base` by the regular expression to form the path. To insert a substring of a concrete source there are special aliases, that are created based on the pattern `<{source}:{index}>`.
 
 ```js
 subImport([
   {
-     id: /([a-z0-9\.\-]*\.css)$/i,
-    base: /components/([a-z0-9]*)\/assets\/([a-z0-9]*)$/i,
-    path: '~/theme/components/<base:$1>/assets/<base:$2>/<id:$1>'
+    match: {
+      request: /([a-z0-9\.\-]*\.css)$/i,
+      base: /components/([a-z0-9]*)\/assets\/([a-z0-9]*)$/i,
+    },
+    use: {
+      request: '~/theme/components/<base:1>/assets/<base:2>/<request:1>'
+    }
   }
 ]);
 ```
 
 In this case, we get the three aliases:
-- `([a-z0-9\.\-]*\.css)` will become `<id:$1>` and will contain required filename;
-- First `([a-z0-9]*)` will become `<base:$1>` and will contain component name;
-- Second `([a-z0-9]*)` will become `<base:$2>` and will contain some directory inside assets.
+- `([a-z0-9\.\-]*\.css)` will become `<request:1>` and will contain required filename;
+- First `([a-z0-9]*)` will become `<base:1>` and will contain component name;
+- Second `([a-z0-9]*)` will become `<base:2>` and will contain some directory inside assets.
 
 Usage of approach of the regular expression is limited only by your imagination.
 
-In addition, you can use predefined placeholders, such as `<root>`, `<id>`, `<folder>` (read [Predefined placeholders](#Predefined-Placeholders)).
+In addition, you can use predefined placeholders, such as `<root>`, `<id>`, `<basename>` (read [Predefined placeholders](#Predefined-Placeholders)).
 
 
 ## Not strict substitution
@@ -135,8 +143,12 @@ In some cases, it is important not to replace imported resource, and to add to t
 ```js
 subImport([
     {
-      id: /variables\.css/,
-      to: "<root>/global/style.css",
+      match: {
+        request: /variables\.css/,
+      },
+      use: {
+        request: "<root>/global/style.css",
+      },
       append: true
     }
 ])
@@ -151,24 +163,34 @@ The added resource will work exactly the same as if you add it as a second impor
 
 ## Properties of rules
 
-- __id__ {RegExp} Regular expression to match and test `id`;
-- __base__ {RegExp} Regular expression to match and test `base`;
-- __module__ {RegExp} Regular expression to match and test `module`;
-- __path__ {string} Path of directory to resolve with;
-- __to__ {string} Path to target file.
-- __append__ {bool} Enable append mode
+- __match__ {object} The values for matching:
+  - __request__ {RegExp} Regular expression to match and test `request`;
+  - __base__ {RegExp} Regular expression to match and test `base`.
+- __use__ {object} The substituted values:
+  - __request__ {string} Path to target file;
+  - __base__ {string} Path of directory to resolve with.
+- __append__ {bool} Enable append mode.
 
 ## Designation
 
-- __id__ The string passed to import; `@import "it_is_id";`
-- __base__ The absolute path to the directory, relative to which the file will be resolved;
-- __module__ Already resolved by postcss-import path.
+- __request__ The string passed to import; `@import "it_is_id";`
+- __base__ The absolute path to the directory, relative to which the file will be resolved.
 
 ## Predefined placeholders
 
+"~": root,
+    "<request>": request,
+    "<root>": root,
+    "<base>": base,
+    "<id>": path.parse(request).base,
+    "<basename>": basename,
+
+
 - `<root>`, `~` Root directory of the project (process.cwd() by default);
-- `<id>` The string passed to import;
-- `<folder>` Base directory name.
+- `<request>` The string passed to import;
+- `<id>` The name of requested file;
+- `<base>` The path to the folder where an import was performed from;
+- `<basename>` The name of the folder where an import was performed from.
 
 ## Using original postcss-import options
 
@@ -178,7 +200,8 @@ You can define original postcss-import options as well as the usual. But in this
 subImport({
     root: path.join(process.cwd(), 'app'),
     sub: {
-      base: /components/
+      match: {...},
+      use: {...}
     }
 });
 ```
@@ -186,17 +209,6 @@ subImport({
 If you wanna to specify your own `resolve` function, keep in mind that your function will be called only in case of failure of sub.
 
 # Examples
-
-__Recolor__
-
-Rule of recoloring SVG logo by substituting one CSS file.
-
-```shell
-git clone https://github.com/morulus/postcss-import-sub.git
-cd postcss-import-sub/examples/recolor
-npm install
-npm start
-```
 
 __Common theme__
 

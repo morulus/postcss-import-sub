@@ -36,7 +36,7 @@ function stat(file, cb) {
       isFile: function() { return true; }
     });
   } else {
-    cb(new Error("Not a file"), null);
+    cb(new Error("Not a file "+file), null);
   }
 }
 

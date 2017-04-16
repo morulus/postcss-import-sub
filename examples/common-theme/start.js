@@ -3,7 +3,7 @@ const path = require('path');
 const chalk = require('chalk');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const subImport = require('postcss-import-sub');
+const subImport = require('../../index.js');
 const autoprefixer = require('autoprefixer');
 const postCssSimpleVars = require('postcss-simple-vars');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
@@ -45,7 +45,7 @@ function createConfig(theme) {
         {
           test: /\.(js)$/,
           include: /(src|components)/,
-          use: 'babel-loader',
+          loader: 'babel-loader',
           query: {
             cacheDirectory: true
           }
@@ -58,7 +58,7 @@ function createConfig(theme) {
             /\.json$/,
             /\.svg$/
           ],
-          use: 'url-loader',
+          loader: 'url-loader',
           query: {
             limit: 10000,
             name: 'static/media/[name].[hash:8].[ext]'
@@ -104,10 +104,15 @@ function createConfig(theme) {
           postcss: [
             subImport([
               {
-                module: /theme\.css$/,
-                to: "<root>/themes/"+theme+"/index.css",
+                match: {
+                  request: /^theme\.css$/
+                },
+                use: {
+                  request: 'index.css',
+                  base: "<root>/themes/"+theme
+                },
                 append: true
-              }
+              },
             ]),
             postCssSimpleVars,
             autoprefixer({

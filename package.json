@@ -1,6 +1,6 @@
 {
   "name": "postcss-import-sub",
-  "version": "1.2.0",
+  "version": "1.3.0-beta.0",
   "description": "Postcss import substitution",
   "engines": {
     "node": ">=4.0"
@@ -24,9 +24,11 @@
   },
   "homepage": "https://github.com/morulus/postcss-import-sub#readme",
   "dependencies": {
+    "import-sub": "^1.0.0-beta.1",
     "postcss-import": ">=8.0.0"
   },
   "devDependencies": {
+    "eslint-plugin-node": "^4.2.2",
     "jest": "^18.1.0"
   }
 }

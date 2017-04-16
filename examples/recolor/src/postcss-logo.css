@@ -1,5 +1,0 @@
-@import "color.css";
-
-.postCssLogo path {
-  fill: $logoColor;
-}

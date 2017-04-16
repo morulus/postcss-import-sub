@@ -53,8 +53,12 @@ describe('postcss-import-sub', () => {
   it ('relative `to` substitution', () => {
     const render = mockRender(sub([
       {
-        id: /red\.css/,
-        to: "blue.css"
+        match: {
+          request: /red\.css/
+        },
+        use: {
+          request: "blue.css"
+        }
       }
     ]));
     return render("red.css", "app/Components/Box/")
@@ -66,8 +70,12 @@ describe('postcss-import-sub', () => {
   it ('relative `to` substitution with dot', () => {
     const render = mockRender(sub([
       {
-        id: /red\.css/,
-        to: "./blue.css"
+        match: {
+          request: /red\.css/
+        },
+        use: {
+          request: "./blue.css"
+        }
       }
     ]));
     return render("red.css", "app/Components/Box/")
@@ -79,8 +87,13 @@ describe('postcss-import-sub', () => {
   it ('absolute `to` substitution', () => {
     const render = mockRender(sub([
       {
-        id: /red\.css/,
-        to: "<root>/app/Components/Box/blue.css"
+        match: {
+          request: /red\.css/
+        },
+        use: {
+          request: "blue.css",
+          base: "<root>/app/Components/Box"
+        }
       }
     ]));
     return render("red.css", "app/Components/Box/")
@@ -92,8 +105,12 @@ describe('postcss-import-sub', () => {
   it ('relative `path` substitution with dot', () => {
     const render = mockRender(sub([
       {
-        id: /red\.css/,
-        path: "<root>/app/Theme/Components/Box/"
+        match: {
+          request: /red\.css/
+        },
+        use: {
+          base: "<root>/app/Theme/Components/Box/",
+        }
       }
     ]));
     return render("./red.css", "app/Components/Box/")
@@ -105,8 +122,12 @@ describe('postcss-import-sub', () => {
   it ('relative `path` substitution with without ending slash', () => {
     const render = mockRender(sub([
       {
-        id: /red\.css/,
-        path: "<root>/app/Theme/Components/Box"
+        match: {
+          request: /red\.css/
+        },
+        use: {
+          base: "<root>/app/Theme/Components/Box"
+        }
       }
     ]));
     return render("red.css", "app/Components/Box/")
@@ -118,8 +139,13 @@ describe('postcss-import-sub', () => {
   it ('absolute `to` substitution with alias', () => {
     const render = mockRender(sub([
       {
-        id: /red\.css/,
-        to: "<root>/app/Theme/Components/Box/<id>"
+        match: {
+          request: /red\.css/
+        },
+        use: {
+          base: "<root>/app/Theme/Components/Box",
+          request: "<id>"
+        }
       }
     ]));
     return render("red.css", "app/Components/Box/")
@@ -131,8 +157,13 @@ describe('postcss-import-sub', () => {
   it ('absolute `to` substitution with alias', () => {
     const render = mockRender(sub([
       {
-        id: /red\.css/,
-        to: "<root>/app/Theme/Components/Box/<id>"
+        match: {
+          request: /red\.css/,
+        },
+        use: {
+          base: '<root>/app/Theme/Components/Box',
+          request: '<id>'
+        }
       }
     ]));
     return render("red.css", "app/Components/Box/")
@@ -144,9 +175,13 @@ describe('postcss-import-sub', () => {
   it ('relative `path` with custom aliases', () => {
     const render = mockRender(sub([
       {
-        id: /red\.css/,
-        base: /Components\/([a-z0-9]+)\//i,
-        path: "<root>/app/Theme/Components/<base:$1>/"
+        match: {
+          request: /red\.css/,
+          base: /Components\/([a-z0-9]+)$/i
+        },
+        use: {
+          base: '<root>/app/Theme/Components/<base:1>/'
+        }
       }
     ]));
     return render("red.css", "app/Components/Box/")
@@ -158,22 +193,14 @@ describe('postcss-import-sub', () => {
   it ('absolute `to` with custom aliases', () => {
     const render = mockRender(sub([
       {
-        id: /([a-z0-9]+)\.css/,
-        base: /Components\/([a-z0-9]+)\//i,
-        to: "<root>/app/Theme/Components/<base:$1>/<id:$1>.css"
-      }
-    ]));
-    return render("red.css", "app/Components/Box/")
-    .then(function(module) {
-      expect(module[0]).toBe("app/Theme/Components/Box/red.css");
-    });
-  });
-
-  it ('absolute `to` with custom aliases using module', () => {
-    const render = mockRender(sub([
-      {
-        module: /\/([a-z0-9]+)\/([a-z0-9]+)\.css/i,
-        to: "<root>/app/Theme/Components/<module:$1>/<module:$2>.css"
+        match: {
+          request: /([a-z0-9]+)\.css/,
+          base: /Components\/([a-z0-9]+)$/i
+        },
+        use: {
+          base: '<root>/app/Theme/Components/<base:1>',
+          request: '<request:1>.css'
+        }
       }
     ]));
     return render("red.css", "app/Components/Box/")
@@ -185,8 +212,14 @@ describe('postcss-import-sub', () => {
   it ('append mode', () => {
     const render = mockRender(sub([
       {
-        module: /\/([a-z0-9]+)\/([a-z0-9]+)\.css/i,
-        to: "<root>/app/Theme/Components/<module:$1>/<module:$2>.css",
+        match: {
+          request: /([a-z0-9]+)\.css/,
+          base: /Components\/([a-z0-9]+)$/i
+        },
+        use: {
+          base: '<root>/app/Theme/Components/<base:1>',
+          request: '<request:1>.css'
+        },
         append: true
       }
     ]));
@@ -200,8 +233,14 @@ describe('postcss-import-sub', () => {
   it ('append mode unresolved', () => {
     const render = mockRender(sub([
       {
-        module: /no.css/i,
-        to: "<root>/app/Theme/Components/<module:$1>/<module:$2>.css",
+        match: {
+          request: /([a-z0-9]+)\.css/,
+          base: /Components2\/([a-z0-9]+)\//i
+        },
+        use: {
+          base: '<root>/app/Theme/Components/<base:1>',
+          request: '<request:1>.css'
+        },
         append: true
       }
     ]));
