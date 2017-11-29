@@ -223,4 +223,4 @@ npm start
 
 # License
 
-Under MIT license, 2016, Vladimir Kalmykov <vladimirmorulus@gmail.com>
+Under MIT license, 2016-2017, Vladimir Kalmykov <vladimirmorulus@gmail.com>
