@@ -1,0 +1,10 @@
+.ThemeLightning {
+  --background-color: #bfd8d8;
+  --foreground-color: #4b5e61;
+  --line-color: rgba(255, 255, 255, 0.32);
+  --line-weight: 1px;
+  --text-color: #49907c;
+  --text-family: 14px Georgia;
+  --anchor-color: #298ea5;
+  --display-unvisible: block;
+}

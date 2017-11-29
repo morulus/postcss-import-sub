@@ -1,0 +1,13 @@
+:root {
+  --background-color: #fff;
+  --line-color: gray;
+  --line-weight: 1px;
+  --text-color: black;
+  --text-family: Arial;
+}
+.Button {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  border: var(--line-weight) var(--line-color) solid;
+  font: 12px var(--text-family);
+}

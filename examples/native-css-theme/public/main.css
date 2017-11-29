@@ -1,0 +1,13 @@
+section {
+  background-color: var(--background-color);
+  color: var(--foreground-color);
+  padding: 20px;
+}
+
+a {
+  color: var(--anchor-color);
+}
+
+.invisible {
+  display: var(--display-unvisible);
+}

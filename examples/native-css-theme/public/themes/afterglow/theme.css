@@ -1,0 +1,10 @@
+.ThemeAfterGlow {
+  --background-color: #2E2E2E;
+  --foreground-color: #d6d6d6;
+  --line-color: #333435;
+  --line-weight: 1px;
+  --text-color: #CC7833;
+  --text-family: 14px Georgia;
+  --anchor-color: #d635d6;
+  --display-unvisible: block;
+}

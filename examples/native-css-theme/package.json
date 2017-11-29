@@ -1,0 +1,17 @@
+{
+  "name": "native-css-theme",
+  "version": "1.0.0",
+  "description": "CSS var theme example",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node start.js"
+  },
+  "author": "Vladimir Kalmykov <vladimirmorulus@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "cowsay": "1.2.1",
+    "openurl": "1.1.1",
+    "pushstate-server": "3.0.1"
+  }
+}
